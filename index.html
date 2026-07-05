@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Dominó Profissional Deluxe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background: #0f2411;
+            background-image: radial-gradient(circle at 50% 50%, #1a421e, #071308);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: clamp(8px, 2vw, 20px);
+            overflow: hidden;
+        }
+
+        .game-container {
+            max-width: 1000px;
+            width: 100%;
+            background: linear-gradient(145deg, #224525, #122814);
+            border-radius: clamp(16px, 4vw, 32px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), inset 0 1px 3px rgba(255, 255, 255, 0.2);
+            padding: clamp(12px, 3vw, 24px);
+            border: 2px solid #426946;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        /* Fullscreen Nativo */
+        :-webkit-full-screen .game-container {
+            max-width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            border: none !important;
+        }
+        :fullscreen .game-container {
+            max-width: 100vw;
+            height: 100vh;
+            border-radius: 0;
+            border: none;
+            padding: clamp(10px, 4vw, 24px) clamp(10px, 4vw, 32px);
+        }
+
+        /* Cabeçalho */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #2a4f2d;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .title {
+            color: #f5eacb;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            font-weight: 800;
+            font-size: clamp(1.2rem, 3vw, 1.6rem);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .title span {
+            background: #d9b650;
+            color: #0f2411;
+            font-size: clamp(0.75rem, 2vw, 0.9rem);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        .actions-header {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: none;
+            padding: clamp(8px, 1.5vw, 12px) clamp(12px, 2vw, 18px);
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: clamp(0.8rem, 1.8vw, 0.95rem);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            white-space: nowrap;
+        }
+        .btn:active { transform: translateY(2px); }
+
+        .btn-fullscreen { background: #2980b9; color: white; }
+        .btn-restart { background: #d9b650; color: #0f2411; }
+        .btn-pass { background: #365e3a; color: #ffffff; opacity: 0.4; cursor: not-allowed; }
+        .btn-pass.active {
+            background: #e74c3c;
+            opacity: 1;
+            cursor: pointer;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        /* Placar */
+        .scoreboard {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 14px;
+            color: #f5f0d7;
+            font-size: clamp(0.85rem, 2vw, 1.05rem);
+            border: 1px solid #244227;
+            gap: 10px;
+        }
+        .score-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .score-item i {
+            font-style: normal;
+            background: #d9b650;
+            padding: 2px 8px;
+            border-radius: 6px;
+            color: #0f2411;
+            font-weight: 700;
+        }
+        .cpu-count-badge {
+            background: rgba(255, 255, 255, 0.15);
+            font-size: 0.8rem;
+            padding: 1px 6px;
+            border-radius: 10px;
+            color: #f5eacb;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Mesa */
+        .table {
+            background: #0b1a0c;
+            border-radius: clamp(14px, 3vw, 24px);
+            padding: clamp(10px, 3vw, 20px);
+            min-height: 200px;
+            box-shadow: inset 0 10px 30px rgba(0,0,0,0.7);
+            border: 1px solid #1e3c21;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            flex-grow: 1;
+        }
+
+        .table-message {
+            color: #a4c7a8;
+            font-weight: 600;
+            font-size: clamp(0.85rem, 2vw, 1.1rem);
+            margin-bottom: 12px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.3);
+            padding: 4px 14px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .pool-counter {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            font-size: 0.8rem;
+            color: #6a8f5a;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 10px;
+            border-radius: 10px;
+        }
+
+        .domino-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: clamp(6px, 1.5vw, 12px);
+            width: 100%;
+            max-height: clamp(160px, 35vh, 300px);
+            overflow-y: auto;
+            padding: 6px;
+        }
+
+        /* Peça de Dominó */
+        .domino {
+            --domino-scale: clamp(34px, 7vw, 54px);
+            display: flex;
+            background: linear-gradient(145deg, #ffffff, #eae5d8);
+            border-radius: calc(var(--domino-scale) * 0.15);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 1px 1px white;
+            padding: calc(var(--domino-scale) * 0.1) calc(var(--domino-scale) * 0.08);
+            gap: calc(var(--domino-scale) * 0.06);
+            border: 1px solid #dcd5c5;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            animation: spawn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes spawn {
+            from { opacity: 0; transform: scale(0.6) translateY(-25px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .table-shake { animation: tableShake 0.15s ease-in-out; }
+        @keyframes tableShake {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(2px, -1px); }
+            75% { transform: translate(-1px, 1px); }
+        }
+
+        .domino-clickable { cursor: pointer; }
+        .domino-clickable:hover {
+            transform: translateY(-6px) scale(1.05);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.5);
+            border-color: #d9b650;
+        }
+        .domino-clickable.invalid { opacity: 0.35; filter: grayscale(0.6); }
+        .domino-clickable.invalid:hover { transform: none; box-shadow: 0 4px 8px rgba(0,0,0,0.4); border-color: #dcd5c5; cursor: not-allowed; }
+
+        .domino-half {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 1px;
+            width: calc(var(--domino-scale) * 0.45);
+            height: calc(var(--domino-scale) * 0.45);
+            align-items: center;
+            justify-items: center;
+        }
+        
+        .divider {
+            width: 2px;
+            background: #554e40;
+            align-self: stretch;
+            margin: 2px 0;
+            opacity: 0.5;
+        }
+
+        .dot {
+            width: calc(var(--domino-scale) * 0.11);
+            height: calc(var(--domino-scale) * 0.11);
+            background: #111;
+            border-radius: 50%;
+        }
+        .dot-empty { opacity: 0; }
+
+        /* Mão do Jogador */
+        .hand-area {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: clamp(12px, 3vw, 24px);
+            padding: clamp(10px, 2.5vw, 16px);
+            border: 1px solid #244227;
+        }
+
+        .hand-title {
+            color: #ece3c0;
+            font-weight: 600;
+            font-size: clamp(0.8rem, 1.8vw, 0.95rem);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .hand-title small {
+            background: #1e3d21;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: #d9b650;
+            font-weight: 700;
+        }
+
+        .hand-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: clamp(6px, 1.5vw, 10px);
+            min-height: 60px;
+        }
+
+        /* Tela de Fim de Jogo Premium */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(4, 12, 5, 0.98);
+            background-image: radial-gradient(circle at 50% 40%, rgba(217, 182, 80, 0.15), rgba(0,0,0,0));
+            border-radius: inherit;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            padding: 20px;
+        }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .overlay-title {
+            font-size: clamp(2.2rem, 6vw, 3.8rem);
+            color: #d9b650;
+            margin-bottom: 12px;
+            text-shadow: 0 0 20px rgba(217, 182, 80, 0.6), 0 4px 15px rgba(0,0,0,0.9);
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: 2px;
+            transform: scale(0.4) translateY(50px);
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .overlay.active .overlay-title { 
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            animation: goldenShine 3s infinite ease-in-out alternate;
+        }
+        
+        @keyframes goldenShine {
+            0% { filter: brightness(1); transform: scale(1); }
+            50% { filter: brightness(1.3); transform: scale(1.03); }
+            100% { filter: brightness(1); transform: scale(1); }
+        }
+
+        .overlay-msg { color: #ffffff; font-size: clamp(0.95rem, 2.5vw, 1.25rem); margin-bottom: 30px; text-align: center; max-width: 80%; opacity: 0; transition: opacity 0.5s ease 0.4s; }
+        .overlay.active .overlay-msg { opacity: 0.9; }
+
+        /* Confetes Metalizados 3D */
+        .confetti-particle {
+            position: absolute;
+            width: clamp(6px, 1.5vw, 12px);
+            height: clamp(12px, 3vw, 24px);
+            pointer-events: none;
+            z-index: 12;
+            top: -30px;
+            animation: fallAndSpin 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes fallAndSpin {
+            0% {
+                transform: translateY(0) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(105vh) rotateX(720deg) rotateY(360deg) rotateZ(180deg);
+                opacity: 0.3;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .actions-header {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .btn { flex-grow: 1; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container" id="mainGameWrapper">
+    <div class="overlay" id="endgameOverlay">
+        <div class="overlay-title" id="overlayTitle">Vitória!</div>
+        <div class="overlay-msg" id="overlayMsg">Você dominou a partida.</div>
+        <button class="btn btn-restart" id="overlayRestartBtn">⟳ Jogar Novamente</button>
+    </div>
+
+    <div class="header">
+        <div class="title">🎲 Dominó <span>Deluxe</span></div>
+        <div class="actions-header">
+            <button class="btn btn-fullscreen" id="fullscreenBtn">📱 Tela Cheia</button>
+            <button class="btn btn-pass" id="passBtn">Comprar Peça</button>
+            <button class="btn btn-restart" id="restartBtn">⟳ Reiniciar</button>
+        </div>
+    </div>
+
+    <div class="scoreboard">
+        <div class="score-item">🤖 Computador <span class="cpu-count-badge" id="cpuHandCount">7</span>: <i id="cpuScore">0</i></div>
+        <div class="score-item">🧑 Você: <i id="playerScore">0</i></div>
+    </div>
+
+    <div class="table" id="tableZone">
+        <div class="table-message" id="gameStatus">Sua vez — Escolha uma peça</div>
+        <div class="domino-row" id="tableRow"></div>
+        <div class="pool-counter" id="poolCounter">Monte: 14</div>
+    </div>
+
+    <div class="hand-area">
+        <div class="hand-title">
+            <span>🧑 Suas Peças</span>
+            <small id="handCount">0</small>
+        </div>
+        <div class="hand-container" id="playerHand"></div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
+            
+            const t = audioCtx.currentTime;
+            
+            if (type === 'play') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(120, t);
+                osc.frequency.exponentialRampToValueAtTime(40, t + 0.08);
+                gain.gain.setValueAtTime(0.6, t);
+                gain.gain.linearRampToValueAtTime(0.001, t + 0.08);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(t); osc.stop(t + 0.09);
+            } 
+            else if (type === 'click') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(550, t);
+                gain.gain.setValueAtTime(0.12, t);
+                gain.gain.linearRampToValueAtTime(0.001, t + 0.03);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(t); osc.stop(t + 0.04);
+            }
+            else if (type === 'error') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(95, t);
+                gain.gain.setValueAtTime(0.2, t);
+                gain.gain.linearRampToValueAtTime(0.001, t + 0.14);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(t); osc.stop(t + 0.15);
+            }
+            else if (type === 'win') {
+                [293.66, 349.23, 440, 523.25].forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, t + (idx * 0.08));
+                    gain.gain.setValueAtTime(0.18, t + (idx * 0.08));
+                    gain.gain.linearRampToValueAtTime(0.001, t + (idx * 0.08) + 0.18);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(t + (idx * 0.08)); osc.stop(t + (idx * 0.08) + 0.22);
+                });
+            }
+            else if (type === 'lose') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, t);
+                osc.frequency.linearRampToValueAtTime(70, t + 0.45);
+                gain.gain.setValueAtTime(0.2, t);
+                gain.gain.linearRampToValueAtTime(0.001, t + 0.45);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(t); osc.stop(t + 0.5);
+            }
+        }
+
+        const dotPositions = {
+            0: [], 1: [4], 2: [0, 8], 3: [0, 4, 8],
+            4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8]
+        };
+
+        let game = { 
+            playerHand: [], 
+            cpuHand: [], 
+            table: [], 
+            pool: [], 
+            leftEnd: null, 
+            rightEnd: null, 
+            playerScore: 0, 
+            cpuScore: 0, 
+            turn: 'player', 
+            passCount: 0 
+        };
+
+        const tableZone = document.getElementById('tableZone');
+        const tableRow = document.getElementById('tableRow');
+        const playerHandDiv = document.getElementById('playerHand');
+        const gameStatus = document.getElementById('gameStatus');
+        const cpuScoreSpan = document.getElementById('cpuScore');
+        const playerScoreSpan = document.getElementById('playerScore');
+        const handCountSpan = document.getElementById('handCount');
+        const cpuHandCountSpan = document.getElementById('cpuHandCount');
+        const passBtn = document.getElementById('passBtn');
+        const poolCounter = document.getElementById('poolCounter');
+        const endgameOverlay = document.getElementById('endgameOverlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const overlayMsg = document.getElementById('overlayMsg');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const mainGameWrapper = document.getElementById('mainGameWrapper');
+
+        function updateFullscreenButtonState() {
+            const isFull = document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            if (isFull) {
+                fullscreenBtn.textContent = "Sair Tela Cheia";
+            } else {
+                fullscreenBtn.textContent = "📱 Tela Cheia";
+            }
+        }
+
+        document.addEventListener('fullscreenchange', updateFullscreenButtonState);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButtonState);
+        document.addEventListener('mozfullscreenchange', updateFullscreenButtonState);
+        document.addEventListener('MSFullscreenChange', updateFullscreenButtonState);
+
+        fullscreenBtn.addEventListener('click', () => {
+            playSound('click');
+            const doc = window.document;
+            const docEl = mainGameWrapper;
+
+            const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+            const isCurrentlyFull = doc.fullscreenElement || doc.mozFullScreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
+
+            if (!isCurrentlyFull) {
+                if (requestFullScreen) {
+                    requestFullScreen.call(docEl).catch(() => {});
+                }
+            } else {
+                if (cancelFullScreen) {
+                    cancelFullScreen.call(doc);
+                }
+            }
+        });
+
+        function createDominoSet() {
+            const set = [];
+            for (let i = 0; i <= 6; i++) {
+                for (let j = i; j <= 6; j++) set.push([i, j]);
+            }
+            return set;
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function createDotsHTML(n) {
+            const container = document.createElement('div');
+            container.className = 'domino-half';
+            const activeDots = dotPositions[n];
+            for (let i = 0; i < 9; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot' + (activeDots.includes(i) ? '' : ' dot-empty');
+                container.appendChild(dot);
+            }
+            return container;
+        }
+
+        function createDominoElement(a, b, clickable = false, valid = true, onClick = null) {
+            const div = document.createElement('div');
+            div.className = 'domino' + (clickable ? ' domino-clickable' : '') + (!valid && clickable ? ' invalid' : '');
+            
+            if (clickable) {
+                div.addEventListener('click', () => {
+                    if (!valid) playSound('error');
+                    else if (onClick) onClick();
+                });
+            }
+
+            div.appendChild(createDotsHTML(a));
+            const divider = document.createElement('div');
+            divider.className = 'divider';
+            div.appendChild(divider);
+            div.appendChild(createDotsHTML(b));
+            return div;
+        }
+
+        function hasValidMoves(hand) {
+            if (game.table.length === 0) return true;
+            return hand.some(p => p[0] === game.leftEnd || p[1] === game.leftEnd || p[0] === game.rightEnd || p[1] === game.rightEnd);
+        }
+
+        function renderTable() {
+            tableRow.innerHTML = '';
+            if (game.table.length === 0) {
+                tableRow.innerHTML = '<div style="color:#527756; font-style:italic; font-size: 0.9rem;">Mesa vazia.</div>';
+                return;
+            }
+            game.table.forEach(piece => {
+                tableRow.appendChild(createDominoElement(piece[0], piece[1], false));
+            });
+            
+            poolCounter.textContent = `Monte: ${game.pool.length}`;
+
+            requestAnimationFrame(() => {
+                tableRow.scrollLeft = tableRow.scrollWidth;
+                tableRow.scrollTop = tableRow.scrollHeight;
+            });
+        }
+
+        function renderPlayerHand() {
+            playerHandDiv.innerHTML = '';
+            handCountSpan.textContent = game.playerHand.length;
+            cpuHandCountSpan.textContent = game.cpuHand.length; // Sincroniza o balão da CPU
+
+            const sortedHand = [...game.playerHand].sort((a,b) => (a[0]-b[0]) || (a[1]-b[1]));
+
+            sortedHand.forEach(piece => {
+                const valid = game.table.length === 0 || piece[0] === game.leftEnd || piece[1] === game.leftEnd || piece[0] === game.rightEnd || piece[1] === game.rightEnd;
+                const el = createDominoElement(piece[0], piece[1], true, valid, () => handlePlayerPlay(piece));
+                playerHandDiv.appendChild(el);
+            });
+
+            if (game.pool.length > 0) {
+                passBtn.textContent = "Comprar Peça";
+            } else {
+                passBtn.textContent = "Passar Vez";
+            }
+
+            if (game.turn === 'player' && !hasValidMoves(game.playerHand)) {
+                passBtn.classList.add('active');
+            } else {
+                passBtn.classList.remove('active');
+            }
+        }
+
+        function updateUI() {
+            cpuScoreSpan.textContent = game.cpuScore;
+            playerScoreSpan.textContent = game.playerScore;
+            cpuHandCountSpan.textContent = game.cpuHand.length; // Garante contagem estável
+            if (game.turn === 'player') {
+                gameStatus.textContent = '🧑 Sua vez — escolha uma peça';
+                gameStatus.style.color = '#a4c7a8';
+            } else {
+                gameStatus.textContent = '🤖 Computador jogando...';
+                gameStatus.style.color = '#f5eacb';
+            }
+        }
+
+        function playPieceLogic(piece, side, isPlayer) {
+            playSound('play');
+            
+            tableZone.classList.remove('table-shake');
+            void tableZone.offsetWidth; 
+            tableZone.classList.add('table-shake');
+
+            const hand = isPlayer ? game.playerHand : game.cpuHand;
+            const idx = hand.findIndex(p => p[0] === piece[0] && p[1] === piece[1]);
+            if (idx !== -1) hand.splice(idx, 1);
+
+            if (game.table.length === 0) {
+                game.table.push(piece);
+                game.leftEnd = piece[0];
+                game.rightEnd = piece[1];
+            } else if (side === 'left') {
+                if (piece[1] === game.leftEnd) {
+                    game.table.unshift(piece);
+                    game.leftEnd = piece[0];
+                } else {
+                    game.table.unshift([piece[1], piece[0]]);
+                    game.leftEnd = piece[1];
+                }
+            } else {
+                if (piece[0] === game.rightEnd) {
+                    game.table.push(piece);
+                    game.rightEnd = piece[1];
+                } else {
+                    game.table.push([piece[1], piece[0]]);
+                    game.rightEnd = piece[0];
+                }
+            }
+            game.passCount = 0;
+        }
+
+        function handlePlayerPlay(piece) {
+            if (game.turn !== 'player') return;
+
+            if (game.table.length === 0) {
+                playPieceLogic(piece, 'right', true);
+            } else {
+                const canLeft = piece[0] === game.leftEnd || piece[1] === game.leftEnd;
+                const canRight = piece[0] === game.rightEnd || piece[1] === game.rightEnd;
+
+                if (canLeft) {
+                    playPieceLogic(piece, 'left', true);
+                } else if (canRight) {
+                    playPieceLogic(piece, 'right', true);
+                } else {
+                    return;
+                }
+            }
+
+            renderTable();
+            if (checkEndConditions()) return;
+
+            game.turn = 'cpu';
+            renderPlayerHand();
+            updateUI();
+            setTimeout(cpuTurn, 900);
+        }
+
+        function cpuTurn() {
+            if (game.turn !== 'cpu') return;
+
+            if (!hasValidMoves(game.cpuHand) && game.pool.length > 0) {
+                const piece = game.pool.pop();
+                game.cpuHand.push(piece);
+                renderTable();
+            }
+
+            const playablePieces = game.cpuHand.filter(piece => 
+                game.table.length === 0 || piece[0] === game.leftEnd || piece[1] === game.leftEnd || piece[0] === game.rightEnd || piece[1] === game.rightEnd
+            );
+
+            if (playablePieces.length > 0) {
+                playablePieces.sort((a,b) => (b[0]+b[1]) - (a[0]+a[1]));
+                const chosenPiece = playablePieces[0];
+
+                if (game.table.length === 0) {
+                    playPieceLogic(chosenPiece, 'right', false);
+                } else if (chosenPiece[0] === game.leftEnd || chosenPiece[1] === game.leftEnd) {
+                    playPieceLogic(chosenPiece, 'left', false);
+                } else {
+                    playPieceLogic(chosenPiece, 'right', false);
+                }
+            } else {
+                game.passCount++;
+                playSound('error');
+                gameStatus.textContent = '🤖 O Computador não tem peças e Passou a vez!';
+            }
+
+            renderTable();
+            if (checkEndConditions()) return;
+
+            game.turn = 'player';
+            renderPlayerHand();
+            updateUI();
+        }
+
+        function triggerConfetti(isVictory) {
+            document.querySelectorAll('.confetti-particle').forEach(p => p.remove());
+
+            const particleCount = isVictory ? 75 : 20;
+            const container = document.getElementById('mainGameWrapper');
+            
+            const victoryColors = ['#d9b650', '#f5eacb', '#2ecc71', '#ffffff', '#f1c40f'];
+            const defeatColors = ['#7f8c8d', '#95a5a6', '#34495e'];
+            const colors = isVictory ? victoryColors : defeatColors;
+
+            for (let i = 0; i < particleCount; i++) {
+                const p = document.createElement('div');
+                p.className = 'confetti-particle';
+                p.style.left = Math.random() * 100 + '%';
+                
+                const widthScale = Math.random() * 0.6 + 0.5;
+                p.style.transform = `scale(${widthScale})`;
+                p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                if (isVictory) {
+                    p.style.boxShadow = '0 2px 5px rgba(217, 182, 80, 0.4)';
+                }
+
+                p.style.animationDelay = Math.random() * 1.5 + 's';
+                p.style.animationDuration = (Math.random() * 1.5 + 2) + 's';
+                
+                container.appendChild(p);
+                setTimeout(() => p.remove(), 4000);
+            }
+        }
+
+        function endMatch(winner, reason) {
+            if (winner === 'player') {
+                game.playerScore++;
+                playSound('win');
+                overlayTitle.textContent = '🏆 VITÓRIA!';
+                overlayTitle.style.color = '#d9b650';
+                triggerConfetti(true);
+            } else if (winner === 'cpu') {
+                game.cpuScore++;
+                playSound('lose');
+                overlayTitle.textContent = '💻 DERROTA...';
+                overlayTitle.style.color = '#e74c3c';
+                triggerConfetti(false);
+            } else {
+                playSound('click');
+                overlayTitle.textContent = '🤝 EMPATE!';
+                overlayTitle.style.color = '#ffffff';
+            }
+            
+            overlayMsg.textContent = reason;
+            setTimeout(() => endgameOverlay.classList.add('active'), 500);
+        }
+
+        function checkEndConditions() {
+            if (game.playerHand.length === 0) {
+                endMatch('player', 'Você bateu todas as peças primeiro!');
+                return true;
+            }
+            if (game.cpuHand.length === 0) {
+                endMatch('cpu', 'O computador bateu todas as peças.');
+                return true;
+            }
+
+            if (game.passCount >= 2 && game.pool.length === 0) {
+                const playerPoints = game.playerHand.reduce((acc, p) => acc + p[0] + p[1], 0);
+                const cpuPoints = game.cpuHand.reduce((acc, p) => acc + p[0] + p[1], 0);
+                let msg = `Jogo Fechado! Contagem: Você (${playerPoints} pts) vs CPU (${cpuPoints} pts).`;
+
+                if (playerPoints < cpuPoints) endMatch('player', msg + ' Você ganhou por menor pontuação!');
+                else if (cpuPoints < playerPoints) endMatch('cpu', msg + ' CPU venceu por menor pontuação.');
+                else endMatch('draw', msg + ' Pontuações idênticas!');
+                return true;
+            }
+            return false;
+        }
+
+        function initGame() {
+            initAudio();
+            document.querySelectorAll('.confetti-particle').forEach(p => p.remove());
+            endgameOverlay.classList.remove('active');
+            
+            const pool = createDominoSet();
+            shuffle(pool);
+
+            game.playerHand = pool.slice(0, 7);
+            game.cpuHand = pool.slice(7, 14);
+            game.pool = pool.slice(14, 28); 
+            
+            game.table = [];
+            game.leftEnd = null;
+            game.rightEnd = null;
+            game.passCount = 0;
+            game.turn = 'player'; 
+
+            renderTable();
+            renderPlayerHand();
+            updateUI();
+        }
+
+        passBtn.addEventListener('click', () => {
+            if (!passBtn.classList.contains('active')) return;
+            
+            if (game.pool.length > 0) {
+                playSound('click');
+                const drawnPiece = game.pool.pop();
+                game.playerHand.push(drawnPiece);
+                
+                renderTable();
+                renderPlayerHand();
+                
+                if (hasValidMoves(game.playerHand)) {
+                    gameStatus.textContent = '🧑 Você comprou uma peça jogável! Faça seu movimento.';
+                } else {
+                    gameStatus.textContent = '⚠️ Peça comprada não serve. Compre novamente.';
+                }
+            } else {
+                game.passCount++;
+                playSound('click');
+                game.turn = 'cpu';
+                renderPlayerHand();
+                updateUI();
+                setTimeout(cpuTurn, 800);
+            }
+        });
+
+        document.getElementById('restartBtn').addEventListener('click', initGame);
+        document.getElementById('overlayRestartBtn').addEventListener('click', initGame);
+
+        initGame();
+    })();
+</script>
+</body>
+</html>
