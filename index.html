@@ -536,36 +536,25 @@
 
         function updateFullscreenButtonState() {
             const isFull = document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
-            if (isFull) {
-                fullscreenBtn.textContent = "Sair Tela Cheia";
-            } else {
-                fullscreenBtn.textContent = "📱 Tela Cheia";
-            }
+            fullscreenBtn.textContent = isFull ? "Sair Tela Cheia" : "📱 Tela Cheia";
         }
 
         document.addEventListener('fullscreenchange', updateFullscreenButtonState);
         document.addEventListener('webkitfullscreenchange', updateFullscreenButtonState);
-        document.addEventListener('mozfullscreenchange', updateFullscreenButtonState);
-        document.addEventListener('MSFullscreenChange', updateFullscreenButtonState);
 
         fullscreenBtn.addEventListener('click', () => {
             playSound('click');
             const doc = window.document;
             const docEl = mainGameWrapper;
 
-            const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
-            const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
-
-            const isCurrentlyFull = doc.fullscreenElement || doc.mozFullScreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
+            const requestFullScreen = docEl.requestFullscreen || docEl.webkitRequestFullScreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+            const cancelFullScreen = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+            const isCurrentlyFull = doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement;
 
             if (!isCurrentlyFull) {
-                if (requestFullScreen) {
-                    requestFullScreen.call(docEl).catch(() => {});
-                }
+                if (requestFullScreen) requestFullScreen.call(docEl).catch(() => {});
             } else {
-                if (cancelFullScreen) {
-                    cancelFullScreen.call(doc);
-                }
+                if (cancelFullScreen) cancelFullScreen.call(doc);
             }
         });
 
@@ -642,7 +631,7 @@
         function renderPlayerHand() {
             playerHandDiv.innerHTML = '';
             handCountSpan.textContent = game.playerHand.length;
-            cpuHandCountSpan.textContent = game.cpuHand.length; // Sincroniza o balão da CPU
+            cpuHandCountSpan.textContent = game.cpuHand.length;
 
             const sortedHand = [...game.playerHand].sort((a,b) => (a[0]-b[0]) || (a[1]-b[1]));
 
@@ -668,7 +657,7 @@
         function updateUI() {
             cpuScoreSpan.textContent = game.cpuScore;
             playerScoreSpan.textContent = game.playerScore;
-            cpuHandCountSpan.textContent = game.cpuHand.length; // Garante contagem estável
+            cpuHandCountSpan.textContent = game.cpuHand.length;
             if (game.turn === 'player') {
                 gameStatus.textContent = '🧑 Sua vez — escolha uma peça';
                 gameStatus.style.color = '#a4c7a8';
@@ -743,10 +732,9 @@
         function cpuTurn() {
             if (game.turn !== 'cpu') return;
 
-            if (!hasValidMoves(game.cpuHand) && game.pool.length > 0) {
+            while (!hasValidMoves(game.cpuHand) && game.pool.length > 0) {
                 const piece = game.pool.pop();
                 game.cpuHand.push(piece);
-                renderTable();
             }
 
             const playablePieces = game.cpuHand.filter(piece => 
